@@ -133,6 +133,9 @@ class Dkyz(Dk):
     flip = -1
 
     def run(self, x, ky, kz):
+        if x != 0:
+            return super().run(x, ky, kz)
+
         # we don't know the x=0 solution, so do the exact sum up to N=1000:
         res = 0
         Nlim = 800
