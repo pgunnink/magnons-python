@@ -135,11 +135,14 @@ class Dkyz(Dk):
     def run(self, x, ky, kz):
         # we don't know the x=0 solution, so do the exact sum up to N=1000:
         res = 0
-        for i in range(1, 1000):
+        Nlim = 800
+        for i in range(-Nlim, Nlim):
             y = i * self.a
-            for j in range(1, 1000):
+            for j in range(-Nlim, Nlim):
+                if i == j == x == 0:
+                    continue
                 z = j * self.a
-                res += np.exp(-1j * (ky * y + kz * z)) * (y * z) / (
+                res += np.exp(-1j * (ky * y + kz * z)) * (-3 * y * z) / (
                     (x**2 + y**2 + z**2)**(5 / 2))
         return -1 * self.mu**2 * res
 
@@ -175,6 +178,6 @@ if __name__ == "__main__":
     H = 700.0
     h = mu * H
     eps = a**(-2)
-    K = Dkyz(eps, a, mu, Ng=2)
+    K = Dkyz(eps, a, mu, Ng=4)
     # target:
     print(f"Target: -9.91297*10^-21, result: {K.run(0, 10**5, 10**5)}")
