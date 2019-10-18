@@ -60,7 +60,6 @@ def get_dispersion_theta(theta,
                          logspace=True,
                          parallel=True,
                          **kwargs):
-    theta = theta * pi / 180
     if logspace:
         kvalues = np.logspace(ky_begin, ky_end, Nk)
     else:
@@ -80,7 +79,7 @@ def get_dispersion_theta(theta,
             for x in tqdm(p.imap(f, kvalues), total=Nk):
                 res.append(x[:firstN])
     else:
-        res = [f(*x)[:firstN] for x in tqdm(kvalues, total=Nk)]
+        res = [f(x)[:firstN] for x in tqdm(kvalues, total=Nk)]
     return np.array(res), kvalues
 
 
