@@ -135,13 +135,12 @@ class Dkyz(Dk):
     def run(self, x, ky, kz):
         # we don't know the x=0 solution, so do the exact sum up to N=1000:
         res = 0
-        for i in range(1000):
+        for i in range(1, 1000):
             y = i * self.a
-            for j in range(1000):
+            for j in range(1, 1000):
                 z = j * self.a
-                res += np.exp(
-                    -1j * (ky * y + kz * z)) * (y * z) /
-                                                ((x**2 + y**2 + z**2)**(5 / 2))
+                res += np.exp(-1j * (ky * y + kz * z)) * (y * z) / (
+                    (x**2 + y**2 + z**2)**(5 / 2))
         return -1 * self.mu**2 * res
 
     def recip_f(self, p, q, ky, kz, gy, gz):
@@ -171,7 +170,7 @@ class Dkyz(Dk):
 
 
 if __name__ == "__main__":
-    from yig import a, mu
+    from magnons.yig import a, mu
 
     H = 700.0
     h = mu * H
