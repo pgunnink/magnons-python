@@ -11,7 +11,9 @@ from functools import partial
 from numpy import pi
 
 
-def energies_angle(ky, kz, phi, E_to_GHz=None, **kwargs):
+def energies_angle(k, phi, E_to_GHz=None, **kwargs):
+    ky = k[0]
+    kz = k[1]
     A, B = AkBkAngle(ky, kz, phi, **kwargs)
     mat = np.block([[A, B], [-B.conj().T, -A]])
     eig = np.real(np.linalg.eigvals(mat))
@@ -19,7 +21,9 @@ def energies_angle(ky, kz, phi, E_to_GHz=None, **kwargs):
     return eig[eig > 0] * E_to_GHz
 
 
-def energies(ky, kz, E_to_GHz=None, **kwargs):
+def energies(k, E_to_GHz=None, **kwargs):
+    ky = k[0]
+    kz = k[1]
     A, B = AkBk(ky, kz, **kwargs)
     mat = np.block([[A, B], [-B.conj().T, -A]])
     eig = np.real(np.linalg.eigvals(mat))
@@ -73,7 +77,7 @@ def get_dispersion_theta(theta,
     if parallel:
         with Pool(4) as p:
             res = []
-            for x in tqdm(p.starmap(f, kvalues), total=Nk):
+            for x in tqdm(p.imap(f, kvalues), total=Nk):
                 res.append(x[:firstN])
     else:
         res = [f(*x)[:firstN] for x in tqdm(kvalues, total=Nk)]
