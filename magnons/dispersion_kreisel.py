@@ -35,10 +35,10 @@ if __name__ == "__main__":
 
     for theta in tqdm([0, 30, 60, 90]):
         plt.figure()
-        res, kvalues = get_dispersion_theta(theta,
+        res, kvalues = get_dispersion_theta(np.radians(theta),
                                             30,
                                             firstN=6,
-                                            parallel=False,
+                                            parallel=True,
                                             **kwargs)
         absk = np.sqrt(np.sum(kvalues**2, axis=1))
         for i in range(6):
@@ -52,5 +52,5 @@ if __name__ == "__main__":
         plt.xlabel(r"$k\ (cm^{-1})$")
         plt.ylabel(r"$E_k\ (GHz)$")
 
-        plt.savefig(f"./Kreisel_plots/theta_{theta}")
+        plt.savefig(f"./Kreisel_plots/theta_{theta}_withtranspose.pdf")
     plt.show()
