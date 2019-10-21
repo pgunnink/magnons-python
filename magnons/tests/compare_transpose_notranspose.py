@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from magnons.yig import a, S, mu, J, Ms
 from magnons.cgs import E_to_GHz
-from magnons.energies import energies, energies_uniform_mode, get_dispersion_theta
+from magnons.energies import get_energies, energies_uniform_mode, get_dispersion_theta
 from tqdm import tqdm
 from copy import copy
 from numpy import pi
