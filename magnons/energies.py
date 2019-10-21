@@ -51,7 +51,7 @@ def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
 
 def ev_in_HP_basis(ev):
     N = ev.shape[1]
-    res = np.zeros((N, N))
+    res = np.zeros((N, N), dtype=np.complex)
     for i in range(N):
         res[:, i] = ev[:N, i] + ev[N:, i]
     return res
