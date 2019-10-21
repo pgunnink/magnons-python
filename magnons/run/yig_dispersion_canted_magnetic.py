@@ -28,8 +28,8 @@ if __name__ == '__main__':
         al = np.radians(al)
         phi = magnetization_angle(al, M=Ms, H=H)
         res, kvalues = get_dispersion_theta(theta,
-                                            30,
-                                            ky_begin=10**2,
+                                            12,
+                                            ky_begin=10**4,
                                             ky_end=2 * 10**6,
                                             phi=phi,
                                             firstN=firstN,
