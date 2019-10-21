@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from magnons.yig import a, S, mu, J, Ms
 from magnons.cgs import E_to_GHz
-from magnons.energies import energies, energies_uniform_mode, get_dispersion_theta
+from magnons.energies import get_energies, energies_uniform_mode, get_dispersion_theta
 from tqdm import tqdm
 from copy import copy
 from numpy import pi
@@ -35,11 +35,11 @@ if __name__ == "__main__":
 
     for theta in tqdm([0, 30, 60, 90]):
         plt.figure()
-        res, kvalues = get_dispersion_theta(np.radians(theta),
-                                            30,
-                                            firstN=6,
-                                            parallel=True,
-                                            **kwargs)
+        res, _, kvalues = get_dispersion_theta(np.radians(theta),
+                                               30,
+                                               firstN=6,
+                                               parallel=True,
+                                               **kwargs)
         absk = np.sqrt(np.sum(kvalues**2, axis=1))
         for i in range(6):
             plt.semilogx(absk, res[:, i], "-", color="black")
