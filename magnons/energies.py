@@ -11,24 +11,64 @@ from functools import partial
 from numpy import pi
 
 
-def energies_angle(k, phi, E_to_GHz=None, **kwargs):
+def get_energies_angle(k,
+                       phi,
+                       E_to_GHz=None,
+                       return_eigenfunctions=False,
+                       **kwargs):
     ky = k[0]
     kz = k[1]
     A, B = AkBkAngle(ky, kz, phi, **kwargs)
-    mat = np.block([[A, B], [-B.conj().T, -A]])
-    eig = np.real(np.linalg.eigvals(mat))
-    eig = np.sort(eig)
-    return eig[eig > 0] * E_to_GHz
+    mat = hamiltonian_AB(A, B)
+    return get_E_and_ev(return_eigenfunctions, mat, E_to_GHz)
 
 
-def energies(k, E_to_GHz=None, **kwargs):
+def get_energies(k, E_to_GHz=None, return_eigenfunctions=False, **kwargs):
     ky = k[0]
     kz = k[1]
     A, B = AkBk(ky, kz, **kwargs)
-    mat = np.block([[A, B], [-B.conj().T, -A]])
-    eig = np.real(np.linalg.eigvals(mat))
-    eig = np.sort(eig)
-    return eig[eig > 0] * E_to_GHz
+    mat = hamiltonian_AB(A, B)
+    return get_E_and_ev(return_eigenfunctions, mat, E_to_GHz)
+
+
+def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
+    if return_eigenfunctions:
+        E, ev = np.linalg.eig(mat)
+        E = np.real(E)
+        idx = np.argsort(E)
+        E = E[idx]
+        ev = ev[:, idx]
+        idx = E > 0
+        E = E[idx] * E_to_GHz
+        ev = ev[:, idx]
+    else:
+        eig = np.real(np.linalg.eigvals(mat))
+        eig = np.sort(eig)
+        E = eig[eig > 0] * E_to_GHz
+        ev = None
+    return E, ev
+
+
+def ev_in_HP_basis(ev):
+    N = ev.shape[1]
+    res = np.zeros((N, N))
+    for i in range(N):
+        res[:, i] = ev[:N, i] + ev[N:, i]
+    return res
+
+
+def hamiltonian_AB(A, B):
+    return np.block([[A, B], [-B.conj().T, -A]])
+
+
+def plot_eigenfunction(k, n, kvalues, E, ev):
+    diff = np.abs(kvalues - np.array(k))
+    diff_distance = np.sqrt(np.sum(diff**2, axis=1))
+    i = np.argmin(diff_distance)
+    ev = ev[i]
+    E = E[i]
+    ev = ev_in_HP_basis(ev)
+    return plt.plot(np.abs(ev[:, n])**2)
 
 
 def energies_uniform_mode(ky,
@@ -45,8 +85,8 @@ def energies_uniform_mode(ky,
     Delta = 4 * pi * mu * M
     d = N * a
     fk = (1 - np.exp(-absk * d)) / (absk * d)
-    return (np.sqrt((h + rho * absk**2 + Delta * (1 - fk) * np.sin(theta)**2) *
-                    (h + rho * absk**2 + Delta * fk)) * E_to_GHz)
+    return np.sqrt((h + rho * absk**2 + Delta * (1 - fk) * np.sin(theta)**2) *
+                   (h + rho * absk**2 + Delta * fk)) * E_to_GHz
 
 
 def get_dispersion_theta(theta,
@@ -59,6 +99,7 @@ def get_dispersion_theta(theta,
                          firstN=6,
                          logspace=True,
                          parallel=True,
+                         return_eigenfunctions=False,
                          **kwargs):
     if logspace:
         kvalues = np.logspace(ky_begin, ky_end, Nk)
@@ -70,17 +111,29 @@ def get_dispersion_theta(theta,
     if phi != 0 or (phi == 0 and use_angled_if_zero):
         kwargs['phi'] = phi
         kwargs['alpha'] = alpha
-        f = partial(energies_angle, **kwargs)
+
+        f = partial(get_energies_angle,
+                    return_eigenfunctions=return_eigenfunctions,
+                    **kwargs)
     else:
-        f = partial(energies, **kwargs)
+        f = partial(get_energies,
+                    return_eigenfunctions=return_eigenfunctions,
+                    **kwargs)
     if parallel:
         with Pool(4) as p:
-            res = []
-            for x in tqdm(p.imap(f, kvalues), total=Nk):
-                res.append(x[:firstN])
+            energies = []
+            eigenfunctions = []
+            for x, ev in tqdm(p.imap(f, kvalues), total=Nk):
+                energies.append(x[:firstN])
+                eigenfunctions.append(ev)
     else:
-        res = [f(x)[:firstN] for x in tqdm(kvalues, total=Nk)]
-    return np.array(res), kvalues
+        energies = []
+        eigenfunctions = []
+        for k in tqdm(kvalues):
+            E, ev = f(k)
+            energies.append(E)
+            eigenfunctions.append(ev)
+    return np.array(energies), eigenfunctions, kvalues
 
 
 def plot_dispersion_ky(res, kvalues):
@@ -102,4 +155,9 @@ if __name__ == "__main__":
         "Nr": 4,
         "Ng": 4,
     }
-    kwargs["N"] = 400
+    kwargs["N"] = 10
+    get_dispersion_theta(0,
+                         10,
+                         return_eigenfunctions=True,
+                         parallel=False,
+                         **kwargs)
