@@ -42,7 +42,7 @@ def f_notranspose(k,
     ky = k[0]
     kz = k[1]
     A, B = AkBk(ky, kz, N=N, a=a, J=J, S=S, h=h, eps=eps, mu=mu)
-    mat = np.block([[A, B], [-B.conj(), -A]])
+    mat = np.block([[A, B], [-B.conj(), -A.T]])
     eig = np.real(np.linalg.eigvals(mat))
     eig = np.sort(eig)
     return eig[eig > 0] * E_to_GHz
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         "h": mu * H,
     }
     E0 = np.sqrt(mu * H * (mu * H + 4 * pi * mu * Ms)) * E_to_GHz
-    Nk = 10
+    Nk = 20
     directory = './tests/transpose_notranspose'
     os.makedirs(directory, exist_ok=True)
 
