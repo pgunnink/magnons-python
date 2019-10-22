@@ -136,7 +136,7 @@ class Dkyz(Dk):
         return super().run(x, ky, kz)
 
     def recip_f(self, p, q, ky, kz, gy, gz):
-        return -pi * self.mu**2 / (2 * np.sqrt(self.eps) * a**2) * (
+        return -pi * self.mu**2 / (2 * np.sqrt(self.eps) * self.a**2) * (
             (ky + gy) * (kz + gz)) / p * f(p, q)
 
     def real_f(self, x, y, z, ky, kz):
