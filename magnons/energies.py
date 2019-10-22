@@ -50,16 +50,20 @@ def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
 
 
 def ev_in_HP_basis(ev):
-    N = ev.shape[1]
-    res = np.zeros((N, N), dtype=np.complex)
-    for i in range(N):
-        res[:, i] = ev[:N, i] + ev[N:, i]
-    return res
+    if len(ev.shape) == 1:
+        N = int(ev.shape[0] / 2)
+        return ev[:N] + ev[N:]
+    else:
+        N = ev.shape[1]
+        res = np.zeros((N, N), dtype=np.complex)
+        for i in range(N):
+            res[:, i] = ev[:N, i] + ev[N:, i]
+        return res
 
 
 def hamiltonian_AB(A, B):
     return np.block([[A, B], [
-        -B.T, -A.T
+        -B.T.conj(), -A
     ]])  # TODO is this correct? the form that Kreisel uses is -B.conj().T, -A
 
 
@@ -134,8 +138,8 @@ def get_dispersion_theta(theta,
         for k in tqdm(kvalues):
             E, ev = f(k)
             energies.append(E)
-            eigenfunctions.append(ev)
-    return np.array(energies), eigenfunctions, kvalues
+            eigenfunctions.append(ev[:, :kwargs["N"]])
+    return np.array(energies), np.array(eigenfunctions), np.array(kvalues)
 
 
 def plot_dispersion_ky(res, kvalues):
