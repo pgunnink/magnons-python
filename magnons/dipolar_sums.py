@@ -113,8 +113,8 @@ class Dkxy(Dk):
 
     def recip_f(self, p, q, ky, kz, gy, gz):
         res = (ky + gy) * f(p, q)
-        return (1j * pi * self.mu**2 /
-                (self.a**2) * np.sign(q / np.sqrt(self.eps)) * res)
+        return (1j * pi * self.mu**2 / (self.a**2)
+                * np.sign(q / np.sqrt(self.eps)) * res)
 
     def real_f(self, x, y, z, ky, kz):
         r2 = y**2 + z**2 + x**2
@@ -130,44 +130,14 @@ class Dkxz(Dkxy):
 
 
 class Dkyz(Dk):
-    flip = -1
+    flip = 1
 
     def run(self, x, ky, kz):
-        if x != 0:
-            return super().run(x, ky, kz)
-        return 0
-        # we don't know the x=0 solution, so do the exact sum up to N=1000:
-        res = 0
-        Nlim = 800
-        for i in range(-Nlim, Nlim):
-            y = i * self.a
-            for j in range(-Nlim, Nlim):
-                if i == j == x == 0:
-                    continue
-                z = j * self.a
-                res += np.exp(-1j * (ky * y + kz * z)) * (-3 * y * z) / (
-                    (x**2 + y**2 + z**2)**(5 / 2))
-        return -1 * self.mu**2 * res
+        return super().run(x, ky, kz)
 
     def recip_f(self, p, q, ky, kz, gy, gz):
-        # if q == 0:
-        #     res = -8 * np.exp(-p**2) + 4 * p**2 * np.exp(-p**2)
-        #     if erfc(p) > sys.float_info.min:
-        #         res += 6 * np.sqrt(pi) * erfc(p)
-        #     res = res * 8 * np.sqrt(pi) / (np.sqrt(self.eps) * 16 * 9 * a**2)
-        #     return res
-        res = -4 / (np.sqrt(pi) * q)
-        if erfc(p - q) > sys.float_info.min:
-            res -= 2 * np.exp(-2 * p * q) * erfc(p - q)
-        if erfc(p + q) > sys.float_info.min:
-            res += 2 * np.exp(2 * p * q) * erfc(p + q)
-        res *= (ky + gy) * (kz + gz) / p
-        if q != 0:
-            return (pi * self.mu**2 / (4 * np.sqrt(self.eps) * self.a**2)
-                    * np.sign(q / np.sqrt(self.eps)) * res)
-        else:
-            return (pi * self.mu**2 /
-                    (4 * np.sqrt(self.eps) * self.a**2) * res)
+        return -pi * self.mu**2 / (2 * np.sqrt(self.eps) * a**2) * (
+            (ky + gy) * (kz + gz)) / p * f(p, q)
 
     def real_f(self, x, y, z, ky, kz):
         r2 = y**2 + z**2 + x**2
@@ -183,4 +153,8 @@ if __name__ == "__main__":
     eps = a**(-2)
     K = Dkyz(eps, a, mu, Ng=4)
     # target:
-    print(f"Target: -9.91297*10^-21, result: {K.run(0, 10**5, 10**5)}")
+    # print(f"Target: -9.91297*10^-21, result: {K.run(0, 10**5, 10**5)}")
+    print(
+        f"Positive: {K.run(-10*a, 10**5, 10**5)}, Negative: {K.run(10*a, 10**5, 10**5)}"
+    )
+    print(f"zero: {K.run(0, 10**5, 10**5)}")
