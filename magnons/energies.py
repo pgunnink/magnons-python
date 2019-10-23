@@ -157,8 +157,8 @@ def get_dispersion_theta(theta,
         kvalues = np.logspace(ky_begin, ky_end, Nk)
     else:
         kvalues = np.linspace(ky_begin, ky_end, Nk)
-    ky = kvalues * np.cos(theta) + 10**-20
-    kz = kvalues * np.sin(theta) + 10**-20
+    ky = kvalues * np.sin(theta) + 10**-20
+    kz = kvalues * np.cos(theta) + 10**-20
     kvalues = np.stack((ky, kz), axis=1)
 
     if phi != 0 or (phi == 0 and use_angled_if_zero):
