@@ -6,7 +6,7 @@ import os
 class Data:
     supported_kwargs = [
         'eps', 'a', 'S', 'mu', 'J', 'H', 'Nr', 'Ng', 'phi', 'alpha', 'theta',
-        'N', 'E_to_GHz', 'h'
+        'N', 'E_to_GHz', 'Nr', 'Ng', 'ky_begin', 'ky_end', 'logspace'
     ]
     data_path = 'data'
     counter_name = 'DATACOUNTER'
@@ -31,11 +31,46 @@ class Data:
     def __exit__(self, *args):
         self.file.close()
 
-    def save_data(self, kvalues, energies, ev, **kwargs):
+    def find_if_exist(self, kwargs):
+        for r in self.data_path:
+            attrs = dict(self.data_path[r].attrs)
+            if len(attrs) != len(kwargs):
+                continue
+            overlap = True
+            for n in attrs:
+                if n not in kwargs:
+                    overlap = False
+                    break
+                value_attrs = attrs[n]
+                value_kwargs = kwargs[n]
+                # first check if both are 0
+                if value_attrs == 0 and value_kwargs == 0:
+                    continue
+                # if either one is 0, but the other is not, break
+                if value_attrs == 0 or value_kwargs == 0:
+                    overlap = False
+                    break
+                if isinstance(value_attrs, np.bool_) and isinstance(
+                        value_kwargs, bool):
+                    if value_attrs != value_kwargs:
+                        overlap = False
+                        break
+
+                if np.abs(1 - value_attrs / value_kwargs) > 0.02:
+                    overlap = False
+                    break
+            if overlap:
+                return True
+        return False
+
+    def save_data(self, kvalues, energies, ev, kwargs, check_exist=True):
         for k in kwargs:
             if k not in self.supported_kwargs:
                 raise Exception(f"{k} is not a supported keyword to save")
         name = f"{self.counter+1}"
+        if check_exist and self.find_if_exist(kwargs):
+            return "Already exists"
+
         try:
             path = self.data_path.create_group(name)
             path.create_dataset('energies', data=energies)
