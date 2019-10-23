@@ -13,25 +13,60 @@ from numpy import pi
 
 def get_energies_angle(k,
                        phi,
+                       alpha,
                        E_to_GHz=None,
                        return_eigenfunctions=False,
-                       **kwargs):
+                       N=None,
+                       J=None,
+                       S=None,
+                       h=None,
+                       eps=None,
+                       a=None,
+                       mu=None,
+                       Nr=4,
+                       Ng=4):
     ky = k[0]
     kz = k[1]
-    A, B = AkBkAngle(ky, kz, phi, **kwargs)
+    A, B = AkBkAngle(ky,
+                     kz,
+                     phi,
+                     alpha,
+                     N=N,
+                     J=J,
+                     S=S,
+                     h=h,
+                     eps=eps,
+                     a=a,
+                     mu=mu,
+                     Nr=Nr,
+                     Ng=Ng)
     mat = hamiltonian_AB(A, B)
     return get_E_and_ev(return_eigenfunctions, mat, E_to_GHz)
 
 
-def get_energies(k, E_to_GHz=None, return_eigenfunctions=False, **kwargs):
+def get_energies(k,
+                 E_to_GHz=None,
+                 return_eigenfunctions=False,
+                 alpha=None,
+                 N=None,
+                 J=None,
+                 S=None,
+                 h=None,
+                 eps=None,
+                 a=None,
+                 mu=None,
+                 Nr=4,
+                 Ng=4):
     ky = k[0]
     kz = k[1]
-    A, B = AkBk(ky, kz, **kwargs)
+    A, B = AkBk(ky, kz, N=N, J=J, S=S, h=h, eps=eps, a=a, mu=mu, Nr=Nr, Ng=Ng)
     mat = hamiltonian_AB(A, B)
     return get_E_and_ev(return_eigenfunctions, mat, E_to_GHz)
 
 
 def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
+    N = len(mat)
+
     if return_eigenfunctions:
         E, ev = np.linalg.eig(mat)
         E = np.real(E)
@@ -41,11 +76,15 @@ def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
         idx = E > 0
         E = E[idx] * E_to_GHz
         ev = ev[:, idx]
+        ev = ev[:N, :N]
+        E = E[:N]
+
     else:
         eig = np.real(np.linalg.eigvals(mat))
         eig = np.sort(eig)
         E = eig[eig > 0] * E_to_GHz
         ev = None
+        E = E[:N]
     return E, ev
 
 
@@ -102,11 +141,18 @@ def get_dispersion_theta(theta,
                          use_angled_if_zero=False,
                          ky_begin=2,
                          ky_end=6,
-                         firstN=6,
                          logspace=True,
                          parallel=True,
                          return_eigenfunctions=False,
-                         **kwargs):
+                         N=100,
+                         J=None,
+                         S=None,
+                         h=None,
+                         eps=None,
+                         a=None,
+                         mu=None,
+                         Nr=4,
+                         Ng=4):
     if logspace:
         kvalues = np.logspace(ky_begin, ky_end, Nk)
     else:
@@ -114,31 +160,48 @@ def get_dispersion_theta(theta,
     ky = kvalues * np.cos(theta) + 10**-20
     kz = kvalues * np.sin(theta) + 10**-20
     kvalues = np.stack((ky, kz), axis=1)
-    if phi != 0 or (phi == 0 and use_angled_if_zero):
-        kwargs['phi'] = phi
-        kwargs['alpha'] = alpha
 
+    if phi != 0 or (phi == 0 and use_angled_if_zero):
         f = partial(get_energies_angle,
+                    phi,
+                    alpha,
                     return_eigenfunctions=return_eigenfunctions,
-                    **kwargs)
+                    N=N,
+                    J=J,
+                    S=S,
+                    h=h,
+                    eps=eps,
+                    a=a,
+                    mu=mu,
+                    Nr=Nr,
+                    Ng=Ng,
+                    E_to_GHz=E_to_GHz)
     else:
         f = partial(get_energies,
                     return_eigenfunctions=return_eigenfunctions,
-                    **kwargs)
+                    N=N,
+                    J=J,
+                    S=S,
+                    h=h,
+                    eps=eps,
+                    a=a,
+                    mu=mu,
+                    Nr=Nr,
+                    Ng=Ng,
+                    E_to_GHz=E_to_GHz)
     if parallel:
         with Pool(4) as p:
-            energies = []
-            eigenfunctions = []
-            for x, ev in tqdm(p.imap(f, kvalues), total=Nk):
-                energies.append(x[:firstN])
-                eigenfunctions.append(ev)
+            energies = np.zeros((Nk, N))
+            eigenfunctions = np.zeros((Nk, N * 2, N), dtype=np.complex)
+            for i, (E, ev) in enumerate(tqdm(p.imap(f, kvalues), total=Nk)):
+                energies[i, :] = E
+                eigenfunctions[i, :] = ev
     else:
-        energies = []
-        eigenfunctions = []
-        for k in tqdm(kvalues):
-            E, ev = f(k)
-            energies.append(E)
-            eigenfunctions.append(ev[:, :kwargs["N"]])
+        energies = np.zeros((Nk, N))
+        eigenfunctions = np.zeros((Nk, N * 2, N), dtype=np.complex)
+        for i, (E, ev) in enumerate(tqdm(map(f, kvalues), total=Nk)):
+            energies[i, :] = E
+            eigenfunctions[i, :] = ev
     return np.array(energies), np.array(eigenfunctions), np.array(kvalues)
 
 
