@@ -23,20 +23,20 @@ if __name__ == '__main__':
 
     kwargs["N"] = N
     firstN = 30
-    al = 0
+    al = 30
     al = np.radians(al)
     kwargs["alpha"] = al
     phi = magnetization_angle(al, M=Ms, H=H)
-    res, kvalues = get_dispersion_theta(theta,
-                                        12,
-                                        ky_begin=10**4,
-                                        ky_end=10**5,
-                                        phi=phi,
-                                        firstN=firstN,
-                                        use_angled_if_zero=True,
-                                        logspace=False,
-                                        parallel=True,
-                                        **kwargs)
+    res, _, kvalues = get_dispersion_theta(theta,
+                                           12,
+                                           ky_begin=1,
+                                           ky_end=10**6,
+                                           phi=phi,
+                                           firstN=firstN,
+                                           use_angled_if_zero=True,
+                                           logspace=False,
+                                           parallel=True,
+                                           **kwargs)
     absk = np.sqrt(np.sum(kvalues**2, axis=1))
     for i in range(firstN):
         plt.plot(absk, res[:, i], "-", color="black")

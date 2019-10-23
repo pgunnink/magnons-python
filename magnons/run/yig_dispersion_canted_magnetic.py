@@ -43,6 +43,7 @@ if __name__ == '__main__':
                                                 use_angled_if_zero=True,
                                                 logspace=False,
                                                 return_eigenfunctions=True,
+                                                parallel=False,
                                                 **kwargs)
 
         absk = np.sqrt(np.sum(kvalues**2, axis=1))
