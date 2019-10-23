@@ -23,3 +23,27 @@ runs:
     theta: 90
     N: 400
     parallel: True
+  - 
+    H: 2500
+    theta: 0
+    N: 400
+    alpha: 0
+    parallel: True
+  - 
+    H: 2500
+    theta: 0
+    N: 400
+    alpha: 30
+    parallel: True
+  - 
+    H: 2500
+    theta: 0
+    N: 400
+    alpha: 60
+    parallel: True
+  - 
+    H: 2500
+    theta: 0
+    N: 400
+    alpha: 80
+    parallel: True
