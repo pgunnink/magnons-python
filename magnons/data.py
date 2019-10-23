@@ -31,6 +31,10 @@ class Data:
     def __exit__(self, *args):
         self.file.close()
 
+    def print_all_data(self):
+        for r in self.data_path:
+            print(dict(self.data_path[r].attrs))
+
     def find_if_exist(self, kwargs):
         for r in self.data_path:
             attrs = dict(self.data_path[r].attrs)
@@ -60,15 +64,26 @@ class Data:
                     overlap = False
                     break
             if overlap:
-                return True
-        return False
+                return True, r
+        return False, None
+
+    def get_data(self, kwargs):
+        exist, r = self.find_if_exist(kwargs)
+        if not exist:
+            raise Exception("One of data files does not exist")
+        path = self.data_path[r]
+        energies = path['energies']
+        ev = path['ev']
+        kvalues = path['kvalues']
+        attrs = dict(path.attrs)
+        return np.array(kvalues), np.array(energies), np.array(ev), attrs
 
     def save_data(self, kvalues, energies, ev, kwargs, check_exist=True):
         for k in kwargs:
             if k not in self.supported_kwargs:
                 raise Exception(f"{k} is not a supported keyword to save")
         name = f"{self.counter+1}"
-        if check_exist and self.find_if_exist(kwargs):
+        if check_exist and self.find_if_exist(kwargs)[0]:
             return "Already exists"
 
         try:
