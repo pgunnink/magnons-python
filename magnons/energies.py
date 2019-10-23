@@ -65,7 +65,7 @@ def get_energies(k,
 
 
 def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
-    N = len(mat)
+    N = int(len(mat) / 2)
 
     if return_eigenfunctions:
         E, ev = np.linalg.eig(mat)
@@ -76,15 +76,19 @@ def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
         idx = E > 0
         E = E[idx] * E_to_GHz
         ev = ev[:, idx]
-        ev = ev[:N, :N]
-        E = E[:N]
+        ev = ev[:, :N]
+        ev = np.pad(ev, ((0, 0), (0, N - ev.shape[1])),
+                    'constant',
+                    constant_values=np.NaN)
 
     else:
         eig = np.real(np.linalg.eigvals(mat))
         eig = np.sort(eig)
         E = eig[eig > 0] * E_to_GHz
         ev = None
-        E = E[:N]
+    E = np.pad(E[:N], (0, N - len(E[:N])),
+               'constant',
+               constant_values=(0, np.NaN))
     return E, ev
 
 
@@ -163,8 +167,8 @@ def get_dispersion_theta(theta,
 
     if phi != 0 or (phi == 0 and use_angled_if_zero):
         f = partial(get_energies_angle,
-                    phi,
-                    alpha,
+                    phi=phi,
+                    alpha=alpha,
                     return_eigenfunctions=return_eigenfunctions,
                     N=N,
                     J=J,
