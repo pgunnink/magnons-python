@@ -53,12 +53,10 @@ def AkBkAngle(ky,
     for i in range(N):
         for j in range(N):
             if i == j:
-                A[i, j] = h * (
-                    np.cos(phi) * np.cos(alpha)
-                    - np.sin(phi) * np.sin(alpha)) + S * np.sum(
-                        zz_table0[i:i + N] * np.cos(phi)**2
-                        + xx_table0[i:i + N] * np.sin(phi)**2
-                        - xz_table0[i:i + N] * np.sin(phi) * np.cos(phi))
+                A[i, j] = h * (np.cos(phi) * np.cos(phi - alpha)) + S * np.sum(
+                    zz_table0[i:i + N] * np.cos(phi)**2
+                    + xx_table0[i:i + N] * np.sin(phi)**2
+                    - xz_table0[i:i + N] * np.sin(phi) * np.cos(phi))
             A[i, j] += S * Jk(i, j, ky, kz, N=N, a=a, J=J)
             A[i, j] -= (
                 S / 2 * (xx_table[i - j + N - 1] * np.cos(phi)**2
