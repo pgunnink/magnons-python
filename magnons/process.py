@@ -60,16 +60,21 @@ class Process:
 
     def get_all(self):
         for r in self.runs:
-            _, save_kwargs = self.create_save_and_run_kwargs(r)
+            apply_kwargs, save_kwargs = self.create_save_and_run_kwargs(r)
             with Data(self.save) as f:
-                yield f.get_data(save_kwargs)
+                if f.find_if_exist(save_kwargs)[0]:
+                    yield f.get_data(save_kwargs)
+                else:
+                    E, ev, kvalues = get_dispersion_theta(**apply_kwargs)
+                    f.save_data(kvalues, E, ev, save_kwargs)
+                    yield f.get_data(save_kwargs)
 
     def create_save_and_run_kwargs(self, run_kwargs):
         kwargs = copy(self.kwargs)
         list_of_kwargs = [
             "theta", "Nk", "phi", "alpha", "use_angled_if_zero", "ky_begin",
             "ky_end", "logspace", "parallel", "return_eigenfunctions", "N",
-            "J", "S", "h", "eps", "a", "mu", "Nr", "Ng", "N"
+            "J", "S", "h", "eps", "a", "mu", "Nr", "Ng", "N", "Nk"
         ]
         for k in run_kwargs:
             if k in ['alpha', 'theta', 'phi']:
