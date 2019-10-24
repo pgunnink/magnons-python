@@ -132,9 +132,6 @@ class Dkxz(Dkxy):
 class Dkyz(Dk):
     flip = 1
 
-    def run(self, x, ky, kz):
-        return super().run(x, ky, kz)
-
     def recip_f(self, p, q, ky, kz, gy, gz):
         return -pi * self.mu**2 / (2 * np.sqrt(self.eps) * self.a**2) * (
             (ky + gy) * (kz + gz)) / p * f(p, q)
