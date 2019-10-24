@@ -9,6 +9,7 @@ from tqdm import tqdm
 from multiprocessing import Pool
 from functools import partial
 from numpy import pi
+from scipy import linalg
 
 
 def get_energies_angle(k,
@@ -68,27 +69,19 @@ def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
     N = int(len(mat) / 2)
 
     if return_eigenfunctions:
-        E, ev = np.linalg.eig(mat)
+        E, ev = linalg.eig(mat, check_finite=False)
         E = np.real(E)
         idx = np.argsort(E)
         E = E[idx]
         ev = ev[:, idx]
-        idx = E > 0
-        E = E[idx] * E_to_GHz
-        ev = ev[:, idx]
-        ev = ev[:, :N]
-        ev = np.pad(ev, ((0, 0), (0, N - ev.shape[1])),
-                    'constant',
-                    constant_values=np.NaN)
+        E = E[-N:] * E_to_GHz
+        ev = ev[:, -N:]
 
     else:
-        eig = np.real(np.linalg.eigvals(mat))
+        eig = np.real(linalg.eigvals(mat))
         eig = np.sort(eig)
-        E = eig[eig > 0] * E_to_GHz
+        E = eig[-N:] * E_to_GHz
         ev = None
-    E = np.pad(E[:N], (0, N - len(E[:N])),
-               'constant',
-               constant_values=(0, np.NaN))
     return E, ev
 
 
@@ -106,7 +99,7 @@ def ev_in_HP_basis(ev):
 
 def hamiltonian_AB(A, B):
     return np.block([[A, B], [
-        -B.T.conj(), -A
+        -B.conj().T, -A.T
     ]])  # TODO is this correct? the form that Kreisel uses is -B.conj().T, -A
 
 
@@ -160,7 +153,7 @@ def get_dispersion_theta(theta,
     if logspace:
         kvalues = np.logspace(ky_begin, ky_end, Nk)
     else:
-        kvalues = np.linspace(ky_begin, ky_end, Nk)
+        kvalues = np.linspace(10**ky_begin, 10**ky_end, Nk)
     ky = kvalues * np.sin(theta) + 10**-20
     kz = kvalues * np.cos(theta) + 10**-20
     kvalues = np.stack((ky, kz), axis=1)
@@ -217,20 +210,15 @@ def plot_dispersion_ky(res, kvalues):
 
 
 if __name__ == "__main__":
-    kwargs = {
-        "eps": a**-2,
-        "a": a,
-        "S": S,
-        "mu": mu,
-        "J": J,
-        "E_to_GHz": E_to_GHz,
-        "h": mu * 700,
-        "Nr": 4,
-        "Ng": 4,
-    }
-    kwargs["N"] = 10
-    get_dispersion_theta(0,
-                         10,
-                         return_eigenfunctions=True,
-                         parallel=False,
-                         **kwargs)
+    get_energies_angle([10**(-3), 10**3],
+                       np.radians(40),
+                       np.radians(60),
+                       E_to_GHz=E_to_GHz,
+                       return_eigenfunctions=True,
+                       N=400,
+                       J=J,
+                       S=S,
+                       h=2500 * mu,
+                       mu=mu,
+                       eps=a**(-2),
+                       a=a)
