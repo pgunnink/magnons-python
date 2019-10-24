@@ -6,7 +6,7 @@ import os
 class Data:
     supported_kwargs = [
         'eps', 'a', 'S', 'mu', 'J', 'H', 'Nr', 'Ng', 'phi', 'alpha', 'theta',
-        'N', 'E_to_GHz', 'Nr', 'Ng', 'ky_begin', 'ky_end', 'logspace'
+        'N', 'E_to_GHz', 'ky_begin', 'ky_end', 'logspace', 'Nk'
     ]
     data_path = 'data'
     counter_name = 'DATACOUNTER'
