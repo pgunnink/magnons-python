@@ -56,20 +56,20 @@ def AkBkAngle(ky,
                 A[i, j] = h * np.cos(phi - alpha) + S * np.sum(
                     zz_table0[i:i + N] * np.cos(phi)**2
                     + xx_table0[i:i + N] * np.sin(phi)**2
-                    - xz_table0[i:i + N] * np.sin(phi) * np.cos(phi))
+                    + xz_table0[i:i + N] * np.sin(phi) * np.cos(phi))
             A[i, j] += S * Jk(i, j, ky, kz, N=N, a=a, J=J)
             A[i, j] -= (
                 S / 2 * (xx_table[i - j + N - 1] * np.cos(phi)**2
                          + yy_table[i - j + N - 1]
                          + zz_table[i - j + N - 1] * np.sin(phi)**2)
-                + 2 * xz_table[i - j + N - 1] * np.sin(phi) * np.cos(phi))
+                - 2 * xz_table[i - j + N - 1] * np.sin(phi) * np.cos(phi))
 
             B[i, j] = -0.5 * S * (
                 xx_table[i - j + N - 1] * np.cos(phi)**2
                 - yy_table[i - j + N - 1]
                 + zz_table[i - j + N - 1] * np.sin(phi)**2
-                + 2 * xz_table[i - j + N - 1] * np.sin(phi) * np.cos(phi)
-                - 2j * xy_table[i - j + N - 1] * np.cos(phi)
+                - 2 * xz_table[i - j + N - 1] * np.sin(phi) * np.cos(phi)
+                + 2j * xy_table[i - j + N - 1] * np.cos(phi)
                 - 2j * yz_table[i - j + N - 1] * np.sin(phi))
     return A, B
 
