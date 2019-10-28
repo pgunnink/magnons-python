@@ -70,7 +70,7 @@ class Process:
                     r_new.append(r_copy)
             else:
                 r_new.append(r)
-        return r
+        return r_new
 
     def get_all(self):
         for r in self.get_all_kwargs():
