@@ -58,8 +58,22 @@ class Process:
         with Data(self.save) as f:
             f.print_all_data()
 
-    def get_all(self):
+    def get_all_kwargs(self):
+        r_new = []
         for r in self.runs:
+            if 'runs' in r:
+                for t in r['runs']:
+                    r_copy = r.copy()
+                    del r_copy['runs']
+                    for key in t:
+                        r_copy[key] = t[key]
+                    r_new.append(r_copy)
+            else:
+                r_new.append(r)
+        return r
+
+    def get_all(self):
+        for r in self.get_all_kwargs():
             apply_kwargs, save_kwargs = self.create_save_and_run_kwargs(r)
             with Data(self.save) as f:
                 if f.find_if_exist(save_kwargs)[0]:
@@ -101,7 +115,7 @@ class Process:
         return apply_kwargs, save_kwargs
 
     def run_all(self):
-        for r in self.runs:
+        for r in self.get_all_kwargs():
             apply_kwargs, save_kwargs = self.create_save_and_run_kwargs(r)
             with Data(self.save) as f:
                 if f.find_if_exist(save_kwargs)[0]:
