@@ -138,7 +138,7 @@ class Dkyz(Dk):
 
     def real_f(self, x, y, z, ky, kz):
         r2 = y**2 + z**2 + x**2
-        return (4 * self.eps**(5 / 2) * self.mu**2 / (np.sqrt(np.pi)) * x * y
+        return (4 * self.eps**(5 / 2) * self.mu**2 / (np.sqrt(np.pi)) * y * z
                 * np.sin(ky * y) * np.sin(kz * z) * misra(r2 * self.eps))
 
 
