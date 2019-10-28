@@ -2,6 +2,9 @@ magnons:
   dir: C:\Users\Gunni002\Dropbox\UU\Magnons\Python\magnons
   save: E:\Magnons\data\main.h5
 
+
+
+  
 runs:
   - 
     H: 700
