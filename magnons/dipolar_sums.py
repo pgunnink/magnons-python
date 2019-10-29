@@ -2,19 +2,29 @@ import numpy as np
 from numpy import pi
 from scipy.special import erfc
 import sys
+import warnings
+
 
 # define helper functions
-
-
 def f(p, q):
-    res = 0
-    plus_erf = erfc(p + q)
-    if plus_erf > sys.float_info.min:
-        res += plus_erf * np.exp(2 * p * q)
-    min_erf = erfc(p - q)
-    if min_erf > sys.float_info.min:
-        res += min_erf * np.exp(-2 * p * q)
-    return res
+    # res = 0
+    # plus_erf = erfc(p + q)
+    # if plus_erf > sys.float_info.min:
+    #     res += plus_erf * np.exp(2 * p * q)
+    # min_erf = erfc(p - q)
+    # if min_erf > sys.float_info.min:
+    #     res += min_erf * np.exp(-2 * p * q)
+    # return res
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore')
+        res = np.zeros_like(p)
+        plus_erf = erfc(p + q)
+        idx = plus_erf > sys.float_info.min
+        res[idx] += (plus_erf * np.exp(2 * p * q))[idx]
+        min_erf = erfc(p - q)
+        idx = min_erf > sys.float_info.min
+        res[idx] += (min_erf * np.exp(-2 * p * q))[idx]
+        return res
 
 
 def misra(x):
@@ -33,7 +43,15 @@ class Dk:
         self.mu = mu
 
     def run(self, x, ky, kz):
-        return self.real_sum(x, ky, kz) + self.recip_sum(x, ky, kz)
+        real_res = self.real_sum(x, ky, kz)
+        recip_res = self.recip_sum(x, ky, kz)
+        res = real_res + recip_res
+        # for convenience, this returns a float if only run for one x value, else
+        # it returns a list. However, almost always you will request a list of x values
+        if isinstance(x, float) or isinstance(x, int):
+            return res[0]
+        else:
+            return res
 
     def real_f(self, x, y, z, ky, kz):
         raise NotImplementedError
@@ -41,7 +59,7 @@ class Dk:
     def recip_f(self, p, q, ky, kz, gy, gz):
         raise NotImplementedError
 
-    def real_sum(self, x, ky, kz):
+    def real_sum_explicit(self, x, ky, kz):
         res = 0
         for i in range(-self.Nr, self.Nr):
             z = i * self.a
@@ -52,7 +70,53 @@ class Dk:
                 res += self.real_f(x, y, z, ky, kz)
         return res
 
+    def real_sum(self, x, ky, kz):
+        if isinstance(x, float) or isinstance(x, int):
+            x = np.ones(1) * x
+            Nx = 1
+        else:
+            Nx = len(x)
+        map_y, map_z = np.mgrid[-self.Nr:self.Nr + 1, -self.Nr:self.Nr
+                                + 1] * self.a
+        # we need this trick to eliminate the x==y==z==0 grid point,
+        # leaving it in will gives NaN warnings
+        map_y = map_y[:, :, np.newaxis]
+        map_z = map_z[:, :, np.newaxis]
+        map_y = np.repeat(map_y, Nx, axis=-1)
+        map_z = np.repeat(map_z, Nx, axis=-1)
+        x = x[np.newaxis, np.newaxis, :]
+        x = np.repeat(np.repeat(x, self.Nr * 2 + 1, axis=0),
+                      self.Nr * 2 + 1,
+                      axis=1)
+        idx = (x == 0) & (map_y == 0) & (map_z == 0)
+        x[idx] = 1
+        res = self.real_f(x, map_y, map_z, ky, kz)
+        res[idx] = 0
+        return np.sum(res, axis=(0, 1))
+
     def recip_sum(self, x, ky, kz):
+        if isinstance(x, float) or isinstance(x, int):
+            x = np.ones(1) * x
+            Nx = 1
+        else:
+            Nx = len(x)
+
+        q = np.sqrt(self.eps) * x
+        map_gy, map_gz = np.mgrid[-self.Ng:self.Ng + 1, -self.Ng:self.Ng
+                                  + 1] * (2 * np.pi / self.a)
+        map_gy = map_gy[:, :, np.newaxis]
+        map_gz = map_gz[:, :, np.newaxis]
+        map_gy = np.repeat(map_gy, Nx, axis=-1)
+        map_gz = np.repeat(map_gz, Nx, axis=-1)
+        q = q[np.newaxis, np.newaxis, :]
+        q = np.repeat(np.repeat(q, self.Ng * 2 + 1, axis=0),
+                      self.Ng * 2 + 1,
+                      axis=1)
+        p = np.sqrt((ky + map_gy)**2
+                    + (kz + map_gz)**2) / (2 * np.sqrt(self.eps))
+        return np.sum(self.recip_f(p, q, ky, kz, map_gy, map_gz), axis=(0, 1))
+
+    def recip_sum_explicit(self, x, ky, kz):
         res = 0
         q = np.sqrt(self.eps) * x
         for m in range(-self.Ng, self.Ng):
@@ -65,9 +129,10 @@ class Dk:
         return res
 
     def table(self, ky, kz, N):
-        temp = np.array(
-            [self.run(i * self.a, ky, kz) for i in range(-N + 1, 1)],
-            dtype=np.complex)
+        # temp = np.array(
+        #     [self.run(i * self.a, ky, kz) for i in range(-N + 1, 1)],
+        #     dtype=np.complex)
+        temp = self.run(np.arange(-N + 1, 1, 1) * self.a, ky, kz)
         return np.concatenate((temp, self.flip * np.flip(temp[:-1])))
 
 
@@ -148,10 +213,12 @@ if __name__ == "__main__":
     H = 700.0
     h = mu * H
     eps = a**(-2)
-    K = Dkyz(eps, a, mu, Ng=4)
+    K = Dkxx(eps, a, mu, Ng=4)
     # target:
     # print(f"Target: -9.91297*10^-21, result: {K.run(0, 10**5, 10**5)}")
-    print(
-        f"Positive: {K.run(-10*a, 10**5, 10**5)}, Negative: {K.run(10*a, 10**5, 10**5)}"
-    )
-    print(f"zero: {K.run(0, 10**5, 10**5)}")
+    # print(
+    #     f"Positive: {K.run(-10*a, 10**5, 10**5)}, Negative: {K.run(10*a, 10**5, 10**5)}"
+    # )
+    # print(f"zero: {K.run(0, 10**5, 10**5)}")
+    print(K.table(10**2, 10**5, 10))
+    print(K.run(-10 * a, 10**2, 10**2))
