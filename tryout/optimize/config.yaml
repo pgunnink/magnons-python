@@ -1,0 +1,21 @@
+magnons:
+  dir: C:\Users\Gunni002\Dropbox\UU\Magnons\Python\magnons
+  save: E:\Magnons\data\main.h5
+
+runs:
+  - 
+    theta: 20
+    H: 2500
+    parallel: False
+    alpha: 30
+    Nr: 4
+    Ng: 4
+    runs:
+      - 
+        N: 50
+      -
+        N: 75
+      - 
+        N: 100
+      -
+        N: 400

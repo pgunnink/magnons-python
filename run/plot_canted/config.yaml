@@ -7,39 +7,17 @@ runs:
     H: 2500
     theta: 0
     N: 400
-    alpha: 0
     parallel: True
     logspace: False
     ky_begin: 2
     ky_end: 6
     Nk: 32
-  - 
-    H: 2500
-    theta: 0
-    N: 400
-    alpha: 30
-    parallel: True
-    logspace: False
-    ky_begin: 2
-    ky_end: 6
-    Nk: 32
-  - 
-    H: 2500
-    theta: 0
-    N: 400
-    alpha: 60
-    parallel: True
-    logspace: False
-    ky_begin: 2
-    ky_end: 6
-    Nk: 32
-  - 
-    H: 2500
-    theta: 0
-    N: 400
-    alpha: 80
-    parallel: True
-    logspace: False
-    ky_begin: 2
-    ky_end: 6
-    Nk: 32
+    runs:
+      -
+        alpha: 0
+      - 
+        alpha: 30
+      -
+        alpha: 60
+      - 
+        alpha: 80
