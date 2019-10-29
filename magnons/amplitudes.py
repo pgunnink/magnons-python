@@ -74,51 +74,6 @@ def AkBkAngle(ky,
     return A, B
 
 
-def AkBkVector(ky,
-               kz,
-               N=None,
-               J=None,
-               S=None,
-               h=None,
-               eps=None,
-               a=None,
-               mu=None,
-               Nr=4,
-               Ng=4):
-    xx = Dkxx(eps=eps, a=a, mu=mu, Nr=Nr, Ng=Ng)
-    yy = Dkyy(eps=eps, a=a, mu=mu, Nr=Nr, Ng=Ng)
-    zz = Dkzz(eps=eps, a=a, mu=mu, Nr=Nr, Ng=Ng)
-    xy = Dkxy(eps=eps, a=a, mu=mu, Nr=Nr, Ng=Ng)
-
-    xx_table = xx.table(ky, kz, N)
-    yy_table = yy.table(ky, kz, N)
-    zz_table0 = zz.table(10**-6, 10**-6, N)
-    xy_table = xy.table(ky, kz, N)
-
-    Atemp = np.zeros((N, N), dtype=np.complex)
-    Btemp = np.zeros((N, N), dtype=np.complex)
-
-    Atemp += np.diag([h + S * np.sum(zz_table0[i:i + N]) for i in range(N)])
-    Atemp += np.diag(
-        np.ones(N) * S * J * (6 - 2 * np.cos(ky * a) - 2 * np.cos(kz * a)))
-    Atemp[0, 0] -= S * J
-    Atemp[N - 1, N - 1] -= S * J
-    Atemp += np.diag(np.ones(N - 1), -1) * -J * S
-    Atemp += np.diag(np.ones(N - 1), 1) * -J * S
-
-    for i in range(-N + 1, N):
-
-        Atemp -= S * .5 * np.diag(
-            np.ones(N - np.abs(i)) *
-            (xx_table[i + N - 1] + yy_table[i + N - 1]), -i)
-
-        Btemp -= S * .5 * np.diag(
-            np.ones(N - np.abs(i)) *
-            (xx_table[i + N - 1] - 2j * xy_table[i + N - 1]
-             - yy_table[i + N - 1]), -i)
-    return Atemp, Btemp
-
-
 def AkBk(ky,
          kz,
          N=None,
