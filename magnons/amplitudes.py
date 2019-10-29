@@ -105,8 +105,6 @@ def AkBkAngle(ky,
     xz_table = xz.table(ky, kz, N)
     yz_table = yz.table(ky, kz, N)
 
-    A = np.zeros((N, N), dtype=np.complex)
-    B = np.zeros((N, N), dtype=np.complex)
     Atemp = np.zeros((N, N), dtype=np.complex)
     Btemp = np.zeros((N, N), dtype=np.complex)
 
