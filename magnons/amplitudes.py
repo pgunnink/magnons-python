@@ -7,7 +7,7 @@ def Jk(i, j, ky, kz, N=None, a=None, J=None):
         res = J * (6 - 2 * np.cos(ky * a) - 2 * np.cos(kz * a))
         if i == 0:
             res -= J
-        if i == N:
+        if i == N - 1:
             res -= J
         return res
     elif i == j + 1 or i == j - 1:
