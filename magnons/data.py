@@ -93,7 +93,7 @@ class Data:
             path.create_dataset('kvalues', data=kvalues)
             for k in kwargs:
                 path.attrs[k] = kwargs[k]
-        except:
+        except Exception:
             raise Exception("Something went wrong saving datafile")
         self.data_path.attrs.modify(self.counter_name, self.counter + 1)
 
