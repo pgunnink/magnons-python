@@ -85,6 +85,13 @@ def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
     return E, ev
 
 
+def klist_ev_in_HP_basis(ev):
+    res = []
+    for x in ev:
+        res.append(ev_in_HP_basis(x))
+    return np.array(res)
+
+
 def ev_in_HP_basis(ev):
     if len(ev.shape) == 1:
         N = int(ev.shape[0] / 2)
