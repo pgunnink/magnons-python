@@ -7,6 +7,8 @@ from magnons.yig import a, S, mu, J, Ms
 from magnons.cgs import E_to_GHz
 from magnons.data import Data
 from copy import copy
+from itertools import product
+import re
 
 
 class Process:
@@ -36,6 +38,8 @@ class Process:
         "parallel": True
     }
 
+    iterable_kwargs = ['alpha', 'N']
+
     def __init__(self, directory):
         files = os.listdir(directory)
 
@@ -58,6 +62,30 @@ class Process:
         with Data(self.save) as f:
             f.print_all_data()
 
+    def process_run_for_iterable(self, r):
+        res = []
+        kwargs_that_are_list = []
+        for it_kwarg in self.iterable_kwargs:
+            if it_kwarg in r:
+                if isinstance(r[it_kwarg], list):
+                    kwargs_that_are_list.append(it_kwarg)
+                elif isinstance(r[it_kwarg], str):
+                    re_match = re.match(r".*:.*:.*", r[it_kwarg])
+                    if re_match is not None:
+                        r[it_kwarg] = np.arange(
+                            *[float(x) for x in r[it_kwarg].split(':')])
+                        kwargs_that_are_list.append(it_kwarg)
+        if len(kwargs_that_are_list) == 0:
+            res.append(r)
+            return res
+        else:
+            for x in product(*[r[y] for y in kwargs_that_are_list]):
+                r_copy = r.copy()
+                for kwarg, value in zip(kwargs_that_are_list, x):
+                    r_copy[kwarg] = value
+                res.append(r_copy)
+            return res
+
     def get_all_kwargs(self):
         r_new = []
         for r in self.runs:
@@ -67,9 +95,11 @@ class Process:
                     del r_copy['runs']
                     for key in t:
                         r_copy[key] = t[key]
-                    r_new.append(r_copy)
+                    r = self.process_run_for_iterable(r)
+                    r_new.extend(r_copy)
             else:
-                r_new.append(r)
+                r = self.process_run_for_iterable(r)
+                r_new.extend(r)
         return r_new
 
     def get_all(self):
@@ -79,6 +109,8 @@ class Process:
                 if f.find_if_exist(save_kwargs)[0]:
                     yield f.get_data(save_kwargs)
                 else:
+                    print("Calculating:")
+                    print(r)
                     E, ev, kvalues = get_dispersion_theta(**apply_kwargs)
                     f.save_data(kvalues, E, ev, save_kwargs)
                     yield f.get_data(save_kwargs)
