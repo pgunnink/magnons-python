@@ -74,7 +74,7 @@ def plot_totalspincurrent(process, S=1, J=1):
     kvalues *= 10**(-4)  # convert to micrometer^-1
     kabs = np.sqrt(np.sum(kvalues[0]**2, axis=1))
 
-    sort_idx = np.argsort(alpha)
+    sort_idx = np.argsort(phi)
 
     alpha = alpha[sort_idx]
     phi = phi[sort_idx]
@@ -82,10 +82,10 @@ def plot_totalspincurrent(process, S=1, J=1):
     alpha = create_edges(alpha, upper_lim=90)
     phi = create_edges(phi, upper_lim=90)
     kabs = create_edges(kabs)
-    X, Y = np.meshgrid(kabs, alpha)
+    X, Y = np.meshgrid(kabs, phi)
     plt.pcolormesh(X, Y, current, cmap='jet')
     plt.colorbar()
     plt.xlabel('|k|')
-    plt.ylabel('Magnetization angle')
+    plt.ylabel('Internal Magnetization angle')
 
     plt.show()
