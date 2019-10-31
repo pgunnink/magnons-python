@@ -5,21 +5,15 @@ magnons:
 runs:
   - 
     H: 700
-    theta: 0
     N: 400
+    Nk: 128
     parallel: True
-  - 
-    H: 700
-    theta: 30
-    N: 400
-    parallel: True
-  - 
-    H: 700
-    theta: 60
-    N: 400
-    parallel: True
-  - 
-    H: 700
-    theta: 90
-    N: 400
-    parallel: True
+    runs:
+      -
+        theta: 0
+      -
+        theta: 30
+      -
+        theta: 60
+      -
+        theta: 90
