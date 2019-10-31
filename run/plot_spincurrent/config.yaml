@@ -1,0 +1,15 @@
+magnons:
+  dir: C:\Users\Gunni002\Dropbox\UU\Magnons\Python\magnons\plot_kreisel
+  save: E:\Magnons\data\main.h5
+
+runs:
+  - 
+    H: 2500
+    theta: 0
+    N: 400
+    parallel: True
+    logspace: False
+    ky_begin: 1
+    ky_end: 5.3
+    Nk: 32
+    alpha: "0:89:1"
