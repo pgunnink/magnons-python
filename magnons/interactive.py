@@ -35,8 +35,11 @@ class DoublePlot:
     def plot_ev(self, k_i, E_i):
         ev = self.ev[k_i, :, E_i]
         ev = ev_in_HP_basis(ev)
+        print(np.sum(ev))
         self.ax_ev.clear()
-        self.ax_ev.plot(np.abs(ev)**2)
+        self.ax_ev.plot(np.real(ev), label='Re', color='red')
+        self.ax_ev.plot(np.imag(ev), label='Im', color='blue')
+        self.ax_ev.legend()
 
     def onclick(self, event):
         # print(f'Edata: {event.ydata}, kdata: {event.xdata}')
@@ -68,5 +71,19 @@ class DoubePlotSpinCurrent(DoublePlot):
         ev = self.ev[k_i, :, E_i]
         ev = ev_in_HP_basis(ev)
         spin_current = np.real(get_spincurrent(ev))
+        print(np.sum(spin_current))
         self.ax_ev.clear()
         self.ax_ev.plot(spin_current)
+
+
+class DoubePlotFourier(DoublePlot):
+    def plot_ev(self, k_i, E_i):
+        ev = self.ev[k_i, :, E_i]
+        ev = ev_in_HP_basis(ev)
+        sp = np.fft.fft(ev)
+        freq = np.fft.fftfreq(len(ev))
+
+        self.ax_ev.clear()
+        self.ax_ev.plot(freq, sp.real, label=f'Re {sp.real[0]:.2e}')
+        self.ax_ev.plot(freq, sp.imag, label=f"Im {sp.imag[0]:.2e}")
+        self.ax_ev.legend()
