@@ -9,8 +9,8 @@ runs:
     N: 400
     parallel: True
     logspace: False
-    ky_begin: 2
-    ky_end: 6
+    ky_begin: 0.2
+    ky_end: 5.3
     Nk: 32
     runs:
       -
