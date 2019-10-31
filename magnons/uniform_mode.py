@@ -15,14 +15,12 @@ def Dkxx_uni(ky, kz, x, mu=None, a=None):
 
 
 def Dkyy_uni(ky, kz, x, theta=None, mu=None, a=None):
-    k = np.sqrt(ky**2 + kz**2)
     if x == 0:
         return Dkyy(eps=a**(-2), a=a, mu=mu).run(0, ky, kz)
     return -1 * np.sin(theta)**2 * Dkxx_uni(ky, kz, x, mu=mu, a=a)
 
 
 def Dkzz_uni(ky, kz, x, theta=None, mu=None, a=None):
-    k = np.sqrt(ky**2 + kz**2)
     if x == 0:
         return Dkzz(eps=a**(-2), a=a, mu=mu).run(0, ky, kz)
     return -1 * np.cos(theta)**2 * Dkxx_uni(ky, kz, x, mu=mu, a=a)
@@ -48,7 +46,6 @@ def AkBk(ky,
          Nr=4,
          Ng=4):
     theta = np.arctan2(ky, kz)
-    kabs = np.sqrt(ky**2 + kz**2)
     xx_table = np.array(
         [Dkxx_uni(ky, kz, x * a, mu=mu, a=a) for x in np.arange(-N + 1, N, 1)])
     yy_table = np.array([
@@ -162,8 +159,7 @@ if __name__ == '__main__':
     from magnons.yig import a, S, mu, J
     from magnons.cgs import E_to_GHz
     import matplotlib.pyplot as plt
-    print(Dkxx(eps=a**(-2), a=a, mu=mu).table(10**2, 10**2, 10).shape)
-    print(np.arange(-10 + 1, 10 + 2).shape)
+
     E, ev, k = get_dispersion_theta(np.radians(90),
                                     Nk=16,
                                     N=400,
@@ -176,6 +172,6 @@ if __name__ == '__main__':
                                     E_to_GHz=E_to_GHz)
     kabs = np.sqrt(np.sum(k**2, axis=1))
     for i in range(6):
-        plt.semilogx(kabs, E[:, i])
+        plt.semilogx(kabs, E[:, i], 'black')
     plt.ylim(np.min(E) * .95, 5.5)
     plt.show()
