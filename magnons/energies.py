@@ -105,9 +105,7 @@ def ev_in_HP_basis(ev):
 
 
 def hamiltonian_AB(A, B):
-    return np.block([[A, B], [
-        -B.conj().T, -A.T
-    ]])  # TODO is this correct? the form that Kreisel uses is -B.conj().T, -A
+    return np.block([[A, B], [-B.conj().T, -A.T]])
 
 
 def plot_eigenfunction(k, n, kvalues, E, ev):
