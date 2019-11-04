@@ -41,8 +41,7 @@ def get_energies_angle(k,
                      mu=mu,
                      Nr=Nr,
                      Ng=Ng)
-    mat = hamiltonian_AB(A, B)
-    return get_E_and_ev(return_eigenfunctions, mat, E_to_GHz)
+    return get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz)
 
 
 def get_energies(k,
@@ -61,11 +60,42 @@ def get_energies(k,
     ky = k[0]
     kz = k[1]
     A, B = AkBk(ky, kz, N=N, J=J, S=S, h=h, eps=eps, a=a, mu=mu, Nr=Nr, Ng=Ng)
+    return get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz)
+
+
+def get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz):
+    D = np.block([[A, B], [B.T, A.T]])
+    N = A.shape[0]
+    K = linalg.cholesky(D, overwrite_a=True, check_finite=False, lower=False)
+    Ip = np.block([[np.identity(N), np.zeros((N, N))],
+                   [np.zeros((N, N)), -np.identity(N)]])
+    M = K @ Ip @ K.conj().T
+    if return_eigenfunctions:
+        E, U = linalg.eigh(M, overwrite_a=True, check_finite=False)
+        E = Ip @ E  # note that linalg.eigh returns sorted eigenvalues
+        E = np.abs(E)  # we want only positive values anyway
+        inverse_K = K.T.conj()
+        ev = inverse_K @ U @ np.diag(E**(1 / 2))
+
+        E = E[:N] * E_to_GHz
+        ev = ev[:, :N]
+        ev = ev * np.sqrt(np.sum(ev**2, axis=0)[np.newaxis, :])**(-1)
+        E = np.flip(E)  # sorted from lowest to highest
+        # same sorting as eigenvalues,
+        # plus flipping the first axis to correspond to the old calculation:
+        ev = np.flip(ev)
+        return E, ev
+    else:
+        E = linalg.eigh(M,
+                        eigvals_only=True,
+                        overwrite_a=True,
+                        check_finite=False)
+        E = Ip @ E
+        return np.abs(E)[:N] * E_to_GHz, None
+
+
+def get_E_and_ev_old(A, B, return_eigenfunctions, E_to_GHz):
     mat = hamiltonian_AB(A, B)
-    return get_E_and_ev(return_eigenfunctions, mat, E_to_GHz)
-
-
-def get_E_and_ev(return_eigenfunctions, mat, E_to_GHz):
     N = int(len(mat) / 2)
 
     if return_eigenfunctions:
