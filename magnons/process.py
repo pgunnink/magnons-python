@@ -38,7 +38,7 @@ class Process:
         "parallel": True
     }
 
-    iterable_kwargs = ['alpha', 'N']
+    iterable_kwargs = ['alpha', 'N', 'theta']
 
     def __init__(self, directory):
         files = os.listdir(directory)
@@ -95,8 +95,7 @@ class Process:
                     del r_copy['runs']
                     for key in t:
                         r_copy[key] = t[key]
-                    r = self.process_run_for_iterable(r)
-                    r_new.extend(r_copy)
+                    r_new.extend(self.process_run_for_iterable(r_copy))
             else:
                 r = self.process_run_for_iterable(r)
                 r_new.extend(r)
