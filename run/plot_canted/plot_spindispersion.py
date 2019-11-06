@@ -42,6 +42,7 @@ if __name__ == "__main__":
                                     ax=ax,
                                     cmap=cmap)
         plt.title(title[i])
+        plt.ylim(top=100)
     fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
                  ax=fig.get_axes())
     plt.show()

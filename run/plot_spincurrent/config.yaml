@@ -1,6 +1,6 @@
 magnons:
   dir: C:\Users\Gunni002\Dropbox\UU\Magnons\Python\magnons\plot_kreisel
-  save: E:\Magnons\data\main.h5
+  save: E:\Magnons\data\spincurrent_plot.h5
 
 runs:
   - 
@@ -11,5 +11,5 @@ runs:
     logspace: False
     ky_begin: 1
     ky_end: 5.3
-    Nk: 32
+    Nk: 128
     alpha: "0:89:1"

@@ -8,12 +8,4 @@ runs:
     N: 400
     Nk: 128
     parallel: True
-    runs:
-      -
-        theta: 0
-      -
-        theta: 30
-      -
-        theta: 60
-      -
-        theta: 90
+    theta: [0, 30, 60, 90]

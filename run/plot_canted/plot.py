@@ -13,7 +13,7 @@ if __name__ == "__main__":
         kabs = np.sqrt(np.sum(kvalues**2, axis=1)) * 10**(-4)
         alpha = attrs['alpha']
         phi = attrs['phi']
-        for n in range(50):
+        for n in range(10):
             plt.plot(kabs, E[:, n], '-', color='black')
             plt.title(f'Alpha {alpha:.1f}, phi {phi:.1f}')
         plt.ylim(E.min() * .95, E.min() + 5)
