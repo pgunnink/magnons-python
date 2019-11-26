@@ -79,6 +79,7 @@ def get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz):
 
         E = E[:N] * E_to_GHz
         ev = ev[:, :N]
+        # normalize:
         ev = ev * np.sqrt(np.sum(ev**2, axis=0)[np.newaxis, :])**(-1)
         E = np.flip(E)  # sorted from lowest to highest
         # same sorting as eigenvalues,
@@ -122,15 +123,22 @@ def klist_ev_in_HP_basis(ev):
     return np.array(res)
 
 
+def ev_HP_to_S(ev, S=1):
+    Sx = np.sqrt(2 * S) / 2 * (ev + ev.conj())
+    Sy = np.sqrt(2 * S) / 2j * (ev - ev.conj())
+    Sz = S - ev * ev.conj()
+    return np.stack((Sx, Sy, Sz))
+
+
 def ev_in_HP_basis(ev):
     if len(ev.shape) == 1:
         N = int(ev.shape[0] / 2)
-        return ev[:N] + ev[N:]
+        return ev[:N].conj() - ev[N:]
     else:
         N = ev.shape[1]
         res = np.zeros((N, N), dtype=np.complex)
         for i in range(N):
-            res[:, i] = ev[:N, i] + ev[N:, i]
+            res[:, i] = ev[:N, i].conj() - ev[N:, i]
         return res
 
 
