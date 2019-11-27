@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from magnons.data import Data
 from magnons.energies import ev_in_HP_basis
 from magnons.spin import get_spincurrent
+from magnons.angular_momentum import spin_momentum_linear
 
 
 class DoublePlot:
@@ -87,3 +88,34 @@ class DoubePlotFourier(DoublePlot):
         self.ax_ev.plot(freq, sp.real, label=f'Re {sp.real[0]:.2e}')
         self.ax_ev.plot(freq, sp.imag, label=f"Im {sp.imag[0]:.2e}")
         self.ax_ev.legend()
+
+
+class DoublePlotSpinMomentum(DoublePlot):
+    def __init__(self, kvalues, energies, ev, S, a, mu, J, phi, alpha, h):
+        super().__init__(kvalues, energies, ev)
+        self.S = S
+        self.a = a
+        self.mu = mu
+        self.phi = phi
+        self.J = J
+        self.h = h
+        self.alpha = alpha
+
+    def plot_ev(self, k_i, E_i):
+        ev = self.ev[k_i, :, E_i]
+        ky, kz = self.kvalues[k_i]
+        N = int(ev.shape[0] / 2)
+        dS = spin_momentum_linear(ev,
+                                  ky,
+                                  kz,
+                                  N,
+                                  a=self.a,
+                                  mu=self.mu,
+                                  S=self.S,
+                                  phi=self.phi,
+                                  J=self.J,
+                                  h=self.h,
+                                  alpha=self.alpha)
+        print(np.sum(dS, axis=0))
+        self.ax_ev.clear()
+        self.ax_ev.plot(dS.real)
