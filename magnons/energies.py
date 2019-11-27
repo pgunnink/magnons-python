@@ -80,7 +80,7 @@ def get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz):
         E = E[:N] * E_to_GHz
         ev = ev[:, :N]
         # normalize:
-        ev = ev * np.sqrt(np.sum(ev**2, axis=0)[np.newaxis, :])**(-1)
+        ev = ev * np.sqrt(np.sum(np.abs(ev)**2, axis=0)[np.newaxis, :])**(-1)
         E = np.flip(E)  # sorted from lowest to highest
         # same sorting as eigenvalues,
         # plus flipping the first axis to correspond to the old calculation:
@@ -133,12 +133,12 @@ def ev_HP_to_S(ev, S=1):
 def ev_in_HP_basis(ev):
     if len(ev.shape) == 1:
         N = int(ev.shape[0] / 2)
-        return ev[:N].conj() - ev[N:]
+        return ev[:N] + ev[N:].conj()
     else:
         N = ev.shape[1]
         res = np.zeros((N, N), dtype=np.complex)
         for i in range(N):
-            res[:, i] = ev[:N, i].conj() - ev[N:, i]
+            res[:, i] = ev[:N, i] + ev[N:, i].conj()
         return res
 
 
@@ -197,8 +197,8 @@ def get_dispersion_theta(theta,
         kvalues = np.logspace(ky_begin, ky_end, Nk)
     else:
         kvalues = np.linspace(10**ky_begin, 10**ky_end, Nk)
-    ky = kvalues * np.sin(theta) + 10**-20
-    kz = kvalues * np.cos(theta) + 10**-20
+    ky = kvalues * np.sin(theta)  #+ 10**-20
+    kz = kvalues * np.cos(theta)  #+ 10**-20
     kvalues = np.stack((ky, kz), axis=1)
 
     if phi != 0 or (phi == 0 and use_angled_if_zero):
