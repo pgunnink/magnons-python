@@ -6,12 +6,12 @@ runs:
   - 
     H: 2500
     theta: 0
-    N: 400
-    parallel: True
+    N: 10
+    parallel: False
     logspace: False
     ky_begin: 0.2
     ky_end: 5.3
-    Nk: 32
+    Nk: 16
     runs:
       -
         alpha: 0
