@@ -61,9 +61,9 @@ class Dk:
 
     def real_sum_explicit(self, x, ky, kz):
         res = 0
-        for i in range(-self.Nr, self.Nr):
+        for i in range(-self.Nr, self.Nr + 1):
             z = i * self.a
-            for j in range(-self.Nr, self.Nr):
+            for j in range(-self.Nr, self.Nr + 1):
                 y = j * self.a
                 if x == 0 and y == 0 and z == 0:
                     continue
@@ -119,9 +119,9 @@ class Dk:
     def recip_sum_explicit(self, x, ky, kz):
         res = 0
         q = np.sqrt(self.eps) * x
-        for m in range(-self.Ng, self.Ng):
+        for m in range(-self.Ng, self.Ng + 1):
             gy = 2 * pi * m / self.a
-            for n in range(-self.Ng, self.Ng):
+            for n in range(-self.Ng, self.Ng + 1):
                 gz = 2 * pi * n / self.a
                 p = np.sqrt((ky + gy)**2
                             + (kz + gz)**2) / (2 * np.sqrt(self.eps))
@@ -213,12 +213,16 @@ if __name__ == "__main__":
     H = 700.0
     h = mu * H
     eps = a**(-2)
-    K = Dkxx(eps, a, mu, Ng=4)
+
     # target:
     # print(f"Target: -9.91297*10^-21, result: {K.run(0, 10**5, 10**5)}")
     # print(
     #     f"Positive: {K.run(-10*a, 10**5, 10**5)}, Negative: {K.run(10*a, 10**5, 10**5)}"
     # )
     # print(f"zero: {K.run(0, 10**5, 10**5)}")
-    print(K.table(10**2, 10**5, 10))
-    print(K.run(-10 * a, 10**2, 10**2))
+    # print(K.table(10**4, 10**4, 10))
+
+    K = Dkyy(eps, a, mu, Ng=10, Nr=10)
+    print(K.run(0, 10**5, 10**2))
+    K = Dkzz(eps, a, mu, Ng=10, Nr=10)
+    print(K.run(0, 10**5, 10**2))
