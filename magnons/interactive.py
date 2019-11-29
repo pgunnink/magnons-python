@@ -34,12 +34,22 @@ class DoublePlot:
         self.selected_point = None
 
     def plot_ev(self, k_i, E_i):
-        ev = self.ev[k_i, :, E_i]
-        ev = ev_in_HP_basis(ev)
-        print(np.sum(ev))
+        # ev = self.ev[k_i, :, E_i]
+        ev = ev_in_HP_basis(self.ev[k_i, :])
+        N = self.energies.shape[1]
+        # print(np.sum(ev))
+        print(self.energies[k_i, E_i], self.energies[k_i, N - E_i - 1])
         self.ax_ev.clear()
-        self.ax_ev.plot(np.real(ev), label='Re', color='red')
-        self.ax_ev.plot(np.imag(ev), label='Im', color='blue')
+        self.ax_ev.plot(np.real(ev[:, E_i]), label='Re', color='red')
+        self.ax_ev.plot(np.imag(ev[:, E_i]), label='Im', color='blue')
+        self.ax_ev.plot(np.real(ev[:, N - E_i - 1].conj()),
+                        '--',
+                        label='Re',
+                        color='red')
+        self.ax_ev.plot(np.imag(ev[:, N - E_i - 1].conj()),
+                        '--',
+                        label='Im',
+                        color='blue')
         self.ax_ev.legend()
 
     def onclick(self, event):
@@ -102,10 +112,11 @@ class DoublePlotSpinMomentum(DoublePlot):
         self.alpha = alpha
 
     def plot_ev(self, k_i, E_i):
-        ev = self.ev[k_i, :, E_i]
+        ev = self.ev[k_i, :]
         ky, kz = self.kvalues[k_i]
         N = int(ev.shape[0] / 2)
-        dS = spin_momentum_linear(ev,
+        dS = spin_momentum_linear(ev.copy(),
+                                  E_i,
                                   ky,
                                   kz,
                                   N,
