@@ -63,6 +63,14 @@ def get_energies(k,
     return get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz)
 
 
+def colpa_convention(E, ev, N):
+    E[:N] = np.flip(E[:N])
+    E[-N:] = np.flip(E[:-N])
+    ev[:, :N] = np.flip(ev[:, :N], axis=1)
+    ev[:, -N:] = np.flip(ev[:, -N:], axis=1)
+    return E, ev
+
+
 def get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz):
     D = np.block([[A, B], [B.T, A.T]])
     N = A.shape[0]
@@ -72,19 +80,28 @@ def get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz):
     M = K @ Ip @ K.conj().T
     if return_eigenfunctions:
         E, U = linalg.eigh(M, overwrite_a=True, check_finite=False)
+        idx = np.argsort(E)
+        E = E[idx]
+        U = U[:, idx]
+        E = np.flip(E)
+        U = np.flip(U, axis=1)
+
         E = Ip @ E  # note that linalg.eigh returns sorted eigenvalues
-        E = np.abs(E)  # we want only positive values anyway
+        # E = np.abs(E)  # we want only positive values anyway
         inverse_K = K.T.conj()
         ev = inverse_K @ U @ np.diag(E**(1 / 2))
 
-        E = E[:N] * E_to_GHz
-        ev = ev[:, :N]
+        E = E * E_to_GHz
+        # ev = ev[:, :N]
         # normalize:
-        ev = ev * np.sqrt(np.sum(np.abs(ev)**2, axis=0)[np.newaxis, :])**(-1)
-        E = np.flip(E)  # sorted from lowest to highest
+        # ev = ev * np.sqrt(np.sum(np.abs(ev)**2, axis=0)[np.newaxis, :])**(-1)
+        # E = np.flip(E)  # sorted from lowest to highest
         # same sorting as eigenvalues,
         # plus flipping the first axis to correspond to the old calculation:
-        ev = np.flip(ev)
+        E[:N] = np.flip(E[:N])
+        E[-N:] = np.flip(E[:-N])
+        ev[:, :N] = np.flip(ev[:, :N], axis=1)
+        ev[:, -N:] = np.flip(ev[:, -N:], axis=1)
         return E, ev
     else:
         E = linalg.eigh(M,
@@ -92,7 +109,7 @@ def get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz):
                         overwrite_a=True,
                         check_finite=False)
         E = Ip @ E
-        return np.abs(E)[:N] * E_to_GHz, None
+        return np.abs(E) * E_to_GHz, None
 
 
 def get_E_and_ev_old(A, B, return_eigenfunctions, E_to_GHz):
@@ -133,12 +150,12 @@ def ev_HP_to_S(ev, S=1):
 def ev_in_HP_basis(ev):
     if len(ev.shape) == 1:
         N = int(ev.shape[0] / 2)
-        return ev[:N] + ev[N:].conj()
+        return ev[:N] + ev[N:]
     else:
-        N = ev.shape[1]
-        res = np.zeros((N, N), dtype=np.complex)
-        for i in range(N):
-            res[:, i] = ev[:N, i] + ev[N:, i].conj()
+        N = int(ev.shape[1] / 2)
+        res = np.zeros((N, N * 2), dtype=np.complex)
+        for i in range(N * 2):
+            res[:, i] = ev[:N, i] + ev[-N:, i]
         return res
 
 
@@ -231,14 +248,14 @@ def get_dispersion_theta(theta,
                     E_to_GHz=E_to_GHz)
     if parallel:
         with Pool(4) as p:
-            energies = np.zeros((Nk, N))
-            eigenfunctions = np.zeros((Nk, N * 2, N), dtype=np.complex)
+            energies = np.zeros((Nk, N * 2))
+            eigenfunctions = np.zeros((Nk, N * 2, N * 2), dtype=np.complex)
             for i, (E, ev) in enumerate(tqdm(p.imap(f, kvalues), total=Nk)):
                 energies[i, :] = E
                 eigenfunctions[i, :] = ev
     else:
-        energies = np.zeros((Nk, N))
-        eigenfunctions = np.zeros((Nk, N * 2, N), dtype=np.complex)
+        energies = np.zeros((Nk, N * 2))
+        eigenfunctions = np.zeros((Nk, N * 2, N * 2), dtype=np.complex)
         for i, (E, ev) in enumerate(tqdm(map(f, kvalues), total=Nk)):
             energies[i, :] = E
             eigenfunctions[i, :] = ev
