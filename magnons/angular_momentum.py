@@ -1,10 +1,11 @@
 import numpy as np
 from magnons.dipolar_sums import Dkxx, Dkyy, Dkzz, Dkxy, Dkxz, Dkyz
 from magnons.energies import ev_in_HP_basis, ev_HP_to_S
-from magnons.amplitudes import Jk
+from magnons.amplitudes import Jk, AkBkAngleExplicit
 
 
 def spin_momentum_linear(ev,
+                         E_i,
                          ky,
                          kz,
                          N,
@@ -15,6 +16,46 @@ def spin_momentum_linear(ev,
                          J=None,
                          h=None,
                          alpha=None):
+    ev[:, -N:] = np.flip(ev[:, -N:], axis=1)  # reflip the stuff
+    eps = a**(-2)
+    A, B = AkBkAngleExplicit(ky,
+                             kz,
+                             phi,
+                             alpha,
+                             N=N,
+                             J=J,
+                             S=S,
+                             h=h,
+                             eps=eps,
+                             a=a,
+                             mu=mu)
+    U = ev[:N, :N]
+    W = ev[:N:, -N:]
+    V = ev[-N:, :N]
+    X = ev[-N:, -N:]
+
+    dtbk = 1j / 2 * ((U + W) @ A + (V + X) @ B)
+    dtbmink_dagger = -1j / 2 * ((V + X) @ A.T + (U + W) @ B.T.conj())
+
+    x = .5 * (dtbk + dtbmink_dagger)[:, E_i]
+    y = -.5j * (dtbk - dtbmink_dagger)[:, E_i]
+    z = (dtbk * dtbmink_dagger)[:, E_i]
+
+    return np.stack((x, y, z)).T
+
+
+def spin_momentum_linear_old1(ev,
+                              E_i,
+                              ky,
+                              kz,
+                              N,
+                              phi=None,
+                              a=None,
+                              mu=None,
+                              S=None,
+                              J=None,
+                              h=None,
+                              alpha=None):
     ev = ev_in_HP_basis(ev)
     eps = a**(-2)
     xx = Dkxx(eps=eps, a=a, mu=mu)
@@ -36,22 +77,25 @@ def spin_momentum_linear(ev,
     yz_table = yz.table(ky, kz, N)
     temp = []
     for i in range(N):
-        bi = ev[i]
+        bi = ev[i, E_i]
+        bimink = ev[i, N * 2 - E_i - 1]
         dt_bi = []
+        dt_bi_mink = []
         for j in range(N):
+            bj = ev[j, E_i]
+            bjmink = ev[j, N * 2 - E_i - 1]
             A = 0
-            if i != j:
-                continue
             if i == j:
                 A += h * np.cos(phi - alpha) + S * np.sum(
                     zz_table0[i:i + N] * np.cos(phi)**2
                     + xx_table0[i:i + N] * np.sin(phi)**2
                     + xz_table0[i:i + N] * np.sin(phi) * np.cos(phi))
             A += S * Jk(i, j, ky, kz, N=N, a=a, J=J)
-            A -= (S / 2 * (xx_table[i - j + N - 1] * np.cos(phi)**2
-                           + yy_table[i - j + N - 1]
-                           + zz_table[i - j + N - 1] * np.sin(phi)**2)
-                  - 2 * xz_table[i - j + N - 1] * np.sin(phi) * np.cos(phi))
+            A -= (S / 2 *
+                  (xx_table[i - j + N - 1] * np.cos(phi)**2
+                   + yy_table[i - j + N - 1]
+                   + zz_table[i - j + N - 1] * np.sin(phi)**2
+                   - 2 * xz_table[i - j + N - 1] * np.sin(phi) * np.cos(phi)))
 
             B = -0.5 * S * (
                 xx_table[i - j + N - 1] * np.cos(phi)**2
@@ -60,12 +104,16 @@ def spin_momentum_linear(ev,
                 - 2 * xz_table[i - j + N - 1] * np.sin(phi) * np.cos(phi)
                 + 2j * xy_table[i - j + N - 1] * np.cos(phi)
                 - 2j * yz_table[i - j + N - 1] * np.sin(phi))
-
-            dt_bi.append(-1j * (bi * A + bi.conj() * B.conj()))
+            # if i == j:
+            #     dt_bi.append(-1j * (bj * A +
+            #                         (.5 * bi.conj() + .5 * bjmink) * B.conj()))
+            # else:
+            dt_bi.append(-1j * (bj * A + .5 * bjmink * B.conj()))
+            dt_bi_mink.append(-1j * (bjmink * A + .5 * bj * B.conj()))
         dt_bi = np.array(dt_bi)
-        y = -1j / 2 * (dt_bi.sum() - dt_bi.sum().conj())
-        x = 1 / 2 * (dt_bi.sum() + dt_bi.sum().conj())
-        z = -dt_bi.sum() * dt_bi.sum().conj()
+        y = -1j / 2 * (dt_bi - dt_bi.conj()).sum()
+        x = 1 / 2 * (dt_bi + dt_bi.conj()).sum()
+        z = (dt_bi * dt_bi.conj()).sum()
         temp.append([x, y, z])
     temp = np.array(temp)
     return temp
