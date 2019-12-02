@@ -87,6 +87,16 @@ class DoubePlotSpinCurrent(DoublePlot):
         self.ax_ev.plot(spin_current)
 
 
+class DoubePlotLeadCurrent(DoublePlot):
+    def plot_ev(self, k_i, E_i):
+        ev = self.ev[k_i, :, E_i]
+        ev = ev_in_HP_basis(ev)
+        spin_current = np.real(get_spincurrent(ev))
+        print(np.sum(spin_current))
+        self.ax_ev.clear()
+        self.ax_ev.plot(spin_current)
+
+
 class DoubePlotFourier(DoublePlot):
     def plot_ev(self, k_i, E_i):
         ev = self.ev[k_i, :, E_i]
