@@ -72,6 +72,7 @@ def colpa_convention(E, ev, N):
 
 
 def get_E_and_ev(A, B, return_eigenfunctions, E_to_GHz):
+    #TODO in the case of return_eigenfunctions=False this does not work properly
     D = np.block([[A, B], [B.T, A.T]])
     N = A.shape[0]
     K = linalg.cholesky(D, overwrite_a=True, check_finite=False, lower=False)
