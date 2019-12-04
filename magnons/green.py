@@ -55,11 +55,11 @@ class Green:
                              eps=self.eps,
                              a=self.a,
                              mu=self.mu)
-        damping = -np.diag(np.ones(self.N) * self.damping)
-        damping[0] -= self.damping_IF
+        damping = np.diag(np.ones(self.N) * self.damping)
+        damping[0] += self.damping_IF
         omega_diag = np.diag(np.ones(self.N) * omega)
-        G_inv = np.block([[A + damping + omega_diag, B],
-                          [-B.T, -A + damping - omega_diag]])
+        G_inv = np.block([[-A - 1j * damping - omega_diag, -B],
+                          [B.T.conj(), A - 1j * damping + omega_diag]])
         driving = self.driving * np.ones(self.N * 2)
 
         b = np.linalg.solve(G_inv, driving)
@@ -69,7 +69,8 @@ class Green:
         E, k = self.get_lowest_E()
         res = []
         for k_i, E_i in zip(k, E):
-            omega = E_i / self.E_to_GHz
+            omega = 2 * np.pi * E_i  # * 10**9
+
             res.append(self.get_current_in_lead(k_i[0], k_i[1], omega))
         return res
 
@@ -91,7 +92,7 @@ class Green:
             a=self.a,
             mu=self.mu,
         )
-        return E[:, 0], k
+        return E[:, 1], k
 
     def get_Sz(self, ky, kz, omega):
         A, B = AkBkAngle(ky,
@@ -107,30 +108,36 @@ class Green:
                          mu=self.mu)
         b = self.get_b(ky, kz, omega, A=A, B=B)
         A -= np.diag(A)
-        ham_Sz = .5j * (A @ (b[:self.N].conj() * b[:self.N]
-                             + b[-self.N:].conj() * b[-self.N:])
-                        - B.T @ (b[-self.N:].conj() * b[:self.N])
-                        + B @ (b[:self.N].conj() * b[-self.N:]))
-        ham_Sz = ham_Sz.imag
-        Sz_damp = np.imag(self.S * self.damping * omega * b[:self.N]
-                          * b[-self.N:])
-        Sz_damp[0] += np.imag(self.S * self.damping_IF * omega * b[0]
-                              * b[self.N])
-        Sz_driving = self.S * np.imag(self.driving * b[:self.N])
-        print(np.sum(ham_Sz), np.sum(Sz_damp), np.sum(Sz_driving))
-        return ham_Sz + Sz_damp + Sz_driving
+        Sz_ham = b * (np.block([[A, -B], [B.conj().T, -A]]) @ b.conj())
+        Sz_ham = Sz_ham[:self.N]
+        # Sz_damp = self.damping * omega * b[:self.N] * b[-self.N:]
+        # Sz_damp[0] += self.damping_IF * omega * b[0] * b[self.N]
+        damping = np.ones(self.N) * self.damping
+        damping[0] += self.damping_IF
+        Sz_damp = damping * omega * (
+            np.cos(self.phi) * 2 * b[:self.N] * b[-self.N:]
+            + np.sqrt(2 * self.S) / 2 * np.sin(self.phi) *
+            (b[:self.N] - b[-self.N:]))
+
+        Sz_driving = 1j * np.sqrt(
+            2 * self.S) / 2 * self.driving * (b[:self.N] - b[-self.N:])
+        print(np.sum(Sz_ham.imag), np.sum(Sz_damp.imag),
+              np.sum(Sz_driving.imag))
+        print(f"Spin current in lead: {Sz_damp[0]}")
+        return Sz_ham + Sz_damp + Sz_driving
 
     def get_current_in_lead(
-            self,
-            ky,
-            kz,
-            omega,
+        self,
+        ky,
+        kz,
+        omega,
     ):
         b = self.get_b(
             ky,
             kz,
             omega,
         )
-        res = self.S * (self.damping
-                        + self.damping_IF) * omega * b[0] * b[self.N]
-        return res
+        Sz_damp = (self.damping + self.damping_IF) * omega * (
+            np.cos(self.phi) * 2 * b[0] * b[self.N]
+            + np.sqrt(2 * self.S) / 2 * np.sin(self.phi) * (b[0] - b[self.N]))
+        return Sz_damp
