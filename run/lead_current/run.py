@@ -8,7 +8,7 @@ if __name__ == "__main__":
     ky = 10**-2
     kz = 10**4
     omega = 1 / E_to_GHz
-    damping = 0.001
+    damping = 5 * 10**(-3)
     damping_IF = 1
     N = 100
     eps = a**(-2)
@@ -17,7 +17,8 @@ if __name__ == "__main__":
     res = []
     for alpha in [0, 10, 30, 60, 80]:
         phi = magnetization_angle(np.radians(alpha), M=Ms, H=H)
-        G = Green(theta=0,
+        G = Green(Nk=4,
+                  theta=np.radians(0),
                   phi=phi,
                   alpha=np.radians(alpha),
                   damping=damping,
@@ -29,8 +30,9 @@ if __name__ == "__main__":
                   eps=eps,
                   a=a,
                   mu=mu,
-                  E_to_GHz=E_to_GHz)
+                  E_to_GHz=E_to_GHz,
+                  driving=h / 100)
         res.append(G.current_per_k())
     res = np.array(res)
-    plt.plot(res.T.imag)
+    plt.plot(res.T)
     plt.show()
